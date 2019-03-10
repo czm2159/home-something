@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>VUE</title>
+	<script src="https://cdn.jsdelivr.net/npm/vue"></script>
+	<style>
+	.page{margin:50px auto;}
+	header{display: flex;justify-content: space-between;align-items: center;border-bottom:1px solid #999;}
+	.progress-bar{position:relative;flex:1;height:20px;border:1px solid #555;color:#555;background-color: #f5f5f5;}
+	.progress-bar:before{position:absolute;content:attr(pvalue);top:50%;left:50%;transform:translate(-50%,-50%);}
+	.progress-bar>i{display:block;height:100%;width:50%;background-color: #00a4ff7d;transition:width .3s linear;}
+	.header{display:flex;justify-content: space-around;align-items: center;border-bottom:1px solid #999;}
+	ul{list-style:none;padding:0;}
+	.down-list>li,.down-done-list>li{display: flex;justify-content: space-around;align-items: center;padding:5px 10px;border-bottom:1px solid #999;}
+	</style>
+</head>
+<body>
+	<div id="app" class="page">
+		<header>下载总进度：<p class="progress-bar" :pvalue="allratio"><i :style="progressWidth"></i></p></header>
+		<ul id="ing" class="down-list"></ul>
+		<ul id="end" class="down-done-list" id="test">
+		</ul>
+		<div>所用时间：{{time}}</div>
+	</div>
+	<script>
+		let push = Array.prototype.push;
+		Array.prototype.push = function(...args){
+			let result = push.apply(this,args);
+			file = args[0];
+			endUl.appendChild(file.dom);
+			file.dom.removeChild(file.txra[1]);
+			file.dom.removeChild(file.txra[2]);
+			return result;
+		}
+		function getRandomSize(){
+			return 1024*1024*Math.random();
+		}
+		function getRandomSpeed(){
+			return 10*1024*Math.random();
+		}
+		class DownFile{
+			constructor(name,size){
+				this.order = DownFile.count++;
+				this.name = name;
+				this.size = size;
+				this._downloaded = 0;
+				this.speed = 0;
+				this.isdone = false;
+			}
+			get surplus(){
+				return ((this.size - this._downloaded)/1024).toFixed(2)+'MB';
+			}
+			get sizeRatio(){
+				return (this._downloaded/this.size*100).toFixed(2)+'%';
+			}
+			get sizeRatioString(){
+				return (this._downloaded/this.size*100).toFixed(2)+'%';
+			}
+			set downloaded(value){
+				let nowVal = this.downloaded + value;
+				this.isdone = nowVal >= this.size;
+				this.speed = this.isdone ? 0 : value;
+				this._downloaded = this.isdone ? this.size : nowVal;
+				//触发一系列事件
+				this.updateInfos();
+			}
+			get downloaded(){
+				return this._downloaded;
+			}
+			updateInfos(){
+				let attr;
+				Array.from(this.txra).forEach(dom => {
+					attr = dom.getAttribute('txra').split(':');
+					switch(attr[0]){
+						case 'text':
+							dom.textContent = this[attr[1]];
+							break;
+						default:throw new Error('暂无绑定属性');break;
+					}
+				});
+			}
+			createAndAppendDocument(){
+				let li = document.createElement('LI');
+				li.innerHTML = `<div><span>${this.name}</span><br/><span txra="text:sizeRatioString">${this.sizeRatioString}</span></div>
+					<span txra="text:surplus">${this.surplus}</span>
+					<p txra="text:sizeRatio">${this.sizeRatio}</p>
+					<em txra="text:speed">${this.speed}</em>`;
+				this.dom = li;
+				this.txra = li.querySelectorAll('[txra]');
+				return li;
+			}
+		}
+		Object.defineProperty(DownFile,'count',{
+			writable:true,
+			value:0
+		});
+		let allSize = 0,
+			ingFiles = [],
+			doneFiles = [],
+			frag = document.createDocumentFragment(),
+			ingUl = document.getElementById('ing'),
+			endUl = document.getElementById('end');
+		for(let i=0,file,size,li;i<1000;i++){
+			size = getRandomSize();
+			file = new DownFile(i+'.file',size);
+			ingFiles[i] = file;
+			li = file.createAndAppendDocument();
+			frag.appendChild(li);
+		}
+		ingUl.appendChild(frag);
+		let inter = setInterval(function(){
+			if(ingFiles.length <= 0){
+				clearInterval(inter);
+			}
+			for(let i=0,file;i<ingFiles.length;i++){
+				file = ingFiles[i];
+				file.downloaded += getRandomSpeed();
+				if(file.isdone){
+					doneFiles.push(file);
+					ingFiles.splice(i--,1);
+					continue;
+				}
+			}
+		},500)
+	</script>
+</body>
+</html>
