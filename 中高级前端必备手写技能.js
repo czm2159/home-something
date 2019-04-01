@@ -74,3 +74,22 @@ function JSONStringify(obj){
     }
 	return _innerHandle(obj);
 }
+/*
+三、实现call或者apply
+*/
+Function.prototype.Call = function(content = window, ...args){
+	//1.把当前执行方法绑定到当前上下文，使方法执行时this是content参数
+	content.fn = this;
+	//2.执行该方法，并获得返回值
+	let res = content.fn(...args);
+	//3.删除方法的绑定
+	delete content.fn;
+	//4.返回返回值
+	return res;
+}
+Function.prototype.Apply = function(content = window, arg){
+	content.fn = this;
+	let res = content.fn(arg);
+	delete content.fn;
+	return res;
+}
