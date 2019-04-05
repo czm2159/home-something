@@ -2,11 +2,13 @@
 一、实现一个new操作符
 */
 function New(Constructor,...args){
-	//1:创建一个对象，
+	//1:创建一个对象，即new出来的对象
 	const result = {};
 	if(Constructor.prototype != null){
-		//实例的原型和构造函数的prototype属性指向的是同一个地址
+		//实例的原型和构造函数的prototype属性指向的是同一个地址，如果是null
 		result.__proto__ = Constructor.prototype;
+		//也可以使用ES6的setPrototypeOf方法
+		//Object.setPrototypeOf(result,Constructor.prototype);
 	}
 	//2.用创建的对象执行构造函数，绑定this
 	const back = Constructor.apply(result,args);
@@ -20,7 +22,7 @@ function New(Constructor,...args){
 	1.如果属性的值是undefined,symbol和function的话，直接忽略该属性；如果这些值出现在数组中，则转为null
 	2.如果出现循环引用，应该会报错，导致得不到结果，这里处理为null
 	3.如果值是对象，数组或者日期，且有toJSON方法，则返回toJson()方法相应的返回值，如果没有返回值，则忽略
-	3.只会处理对象自身的可枚举属性，所以用Object.entries最合适
+	4.只会处理对象自身的可枚举属性，所以用Object.entries最合适
 		for...in：自身和原型中的可枚举属性，不包括Symbol
 		Object.keys：自身可枚举属性，不包括Symbol
 		Object.getOwnPropertyNames：自身可枚举和不可枚举属性，不包括Symbol
@@ -75,9 +77,15 @@ function JSONStringify(obj){
 	return _innerHandle(obj);
 }
 /*
-三、实现call或者apply
+三、实现call、apply和bind
+	call和apply都是第一个参数当作执行上下文，后面的参数当作调用的参数，唯一的区别在于call是枚举参数，apply是一个数组类的参数
+	返回值是执行方法后的返回值
+	bind和call相似，不同的是返回值是一个函数，而不是函数的返回值
+	tips：函数是可以执行new操作的，bind函数返回的函数如果执行new操作，生成实例的构造函数是调用bind的函数
 */
 Function.prototype.Call = function(content = window, ...args){
+    //bind方法不是构造函数
+    if(typeof this !== 'function') throw new Error('Function.Call is not a constructor!');
 	//1.把当前执行方法绑定到当前上下文，使方法执行时this是content参数
 	content.fn = this;
 	//2.执行该方法，并获得返回值
@@ -88,8 +96,26 @@ Function.prototype.Call = function(content = window, ...args){
 	return res;
 }
 Function.prototype.Apply = function(content = window, arg){
+    if(typeof this !== 'function') throw new Error('Function.Apply is not a constructor!');
 	content.fn = this;
 	let res = content.fn(arg);
 	delete content.fn;
 	return res;
+}
+Function.prototype.Bind = function(content = window, ...outArgs){
+    //bind方法不是构造函数
+    if(typeof this !== 'function') throw new Error('Function.bind is not a constructor!');
+    //保存调用的函数
+    const Origin = this;
+    //返回值，可能还有参数传入
+    function Result(...innerArgs){
+        /*
+        绑定this，并把之前保存的参数合并传入执行
+        如果这个函数被new了，this就不是bind传入的content参数了
+        */
+        return Origin.apply(this instanceof Result? this: content,outArgs.concat(innerArgs));
+    }
+    //返回值的prototype应该和this保持一致，以保证this对象的各种操作
+    Result.prototype = Origin.prototype;
+    return Result;
 }
