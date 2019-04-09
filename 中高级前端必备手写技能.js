@@ -119,3 +119,42 @@ Function.prototype.Bind = function(content = window, ...outArgs){
     Result.prototype = Origin.prototype;
     return Result;
 }
+/*
+四、实现继承
+*/
+//原型链继承
+//存在问题：1、所有子类共享一个types属性，2、子类的构造函数是父类，而不是子类
+function Shape(){this.types = ['circle','rect','triangle']}
+function Circle(){}
+//子类的prototype指向父类的实例
+Circle.prototype = new Shape();
+/*
+var c = new Circle();子类的实例
+var s = new Shape();父类的实例
+c.__proto__ === Circle.prototype;子类的原型
+s.__proto__ === Shape.prototype;父类的原型
+推导出
+c.__proto__.__proto__ === Shape.prototype;
+所以子类的实例的含有父类的属性和方法
+*/
+
+//借用构造函数
+//存在问题：1、所有要继承的属性和方法只能在父类构造函数中定义，导致函数无法复用，2、父类原型中的属性和方法，子类不可见
+function Shape(){this.types = ['circle','rect','triangle']}
+function Circle(){
+	//用子类的实例执行父类构造函数方法，子类的实例就拥有了父类构造函数中定义的属性和方法，但是没有涉及到原型
+	Shape.call(this);
+}
+//3、组合继承，又叫伪经典继承，是将原型链和借用构造函数融合的继承
+//js中最常用的继承模式
+function Parent(){}
+function Child(){
+	//构造函数借用
+	Parent.call(this);
+}
+//原型链的变更
+Child.prototype = new Parent();
+//子类实例的构造函数应该是子类，而不是父类
+Child.prototype.constructor = Child;
+//4、原型式继承
+//5、寄生式继承
