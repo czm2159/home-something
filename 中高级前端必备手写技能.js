@@ -120,10 +120,12 @@ Function.prototype.Bind = function(content = window, ...outArgs){
     return Result;
 }
 /*
-四、实现继承
+四、继承
 */
-//原型链继承
-//存在问题：1、所有子类共享一个types属性，2、子类的构造函数是父类，而不是子类
+/*
+1原型链继承
+存在问题：1、所有子类共享一个types属性，2、子类的构造函数是父类，而不是子类
+*/
 function Shape(){this.types = ['circle','rect','triangle']}
 function Circle(){}
 //子类的prototype指向父类的实例
@@ -138,23 +140,90 @@ c.__proto__.__proto__ === Shape.prototype;
 所以子类的实例的含有父类的属性和方法
 */
 
-//借用构造函数
-//存在问题：1、所有要继承的属性和方法只能在父类构造函数中定义，导致函数无法复用，2、父类原型中的属性和方法，子类不可见
+/*
+2借用构造函数
+存在问题：1、所有要继承的属性和方法只能在父类构造函数中定义，导致函数无法复用，2、父类原型中的属性和方法，子类不可见
+*/
 function Shape(){this.types = ['circle','rect','triangle']}
 function Circle(){
 	//用子类的实例执行父类构造函数方法，子类的实例就拥有了父类构造函数中定义的属性和方法，但是没有涉及到原型
 	Shape.call(this);
 }
-//3、组合继承，又叫伪经典继承，是将原型链和借用构造函数融合的继承
-//js中最常用的继承模式
+
+/*
+3、组合继承，又叫伪经典继承，是将原型链和借用构造函数融合的继承，js中最常用的继承模式
+缺点：无论什么情况下都会调用两次父类的构造函数
+*/
 function Parent(){}
 function Child(){
-	//构造函数借用
+	//构造函数借用，又调用了一次父类构造函数
 	Parent.call(this);
 }
-//原型链的变更
+//原型链的变更，调用了一次父类构造函数
 Child.prototype = new Parent();
 //子类实例的构造函数应该是子类，而不是父类
 Child.prototype.constructor = Child;
-//4、原型式继承
-//5、寄生式继承
+
+/*
+4、原型式继承，参数必须是一个对象
+ES5后被规范化方法Object.create()代替，和原型链继承很像，区别是更加小巧，父类的构造函数不是必要的
+*/
+function object(o){
+	//临时构造函数
+	function F(){}
+	//传入的对象作为该构造函数的原型
+	F.prototype = o;
+	//返回该构造函数的实例
+	return new F();
+}
+
+/*
+5、寄生式继承，基于原型式继承
+由于扩展的方法(本例中的obj.custom)不能复用，所以效率会降低
+*/
+function createObject(o){
+	//使用原型式继承
+	var obj = object(o);
+	//对继承来的对象进行扩展增强
+	obj.custom = function(){
+		/* do something */
+	}
+	//返回这个对象
+	return obj;
+}
+
+/*
+6、寄生组合式继承，结合组合继承和寄生继承的优点，被认为是最有效的继承方式
+*/
+function inherit(Child,Parent){
+	//创建一个以父类原型为为原型的对象
+	//由4得出：prototype.__proto__指向Parent.prototype
+	var prototype = object(Parent.prototype);
+	//该对象的构造函数指向子类
+	prototype.constructor = Child;
+	//子类的原型对象指向了该对象
+	Child.prototype = prototype;
+}
+
+function Parent(){}
+function Child(){}
+inherit(Child,Parent);
+var child = new Child();
+child.__proto__ === Child.prototype
+child.__proto__.__proto__ === Parent.prototype
+
+/*
+五、实现函数柯里化
+*/
+
+/*
+六、实现Promise
+*/
+
+/*
+七、实现防抖和节流
+*/
+
+/*
+八、实现一个深拷贝
+*/
