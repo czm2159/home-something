@@ -236,7 +236,7 @@ function Currying(fn,args){
 //当然，如果用ES6的话，可以这样(枚举参数)：
 const Currying = (fn,...args) => (...arr) => [...args,...arr].length === fn.length? fn(...[...args,...arr]): Currying(fn,...[...args,...arr]);
 //或者这样(数组参数)：
-var Currying = (fn, arr = []) => (...args) => (arg => arg.length === fn.length? fn(...arg): Currying(fn, arg))([...arr, ...args])
+const Currying = (fn, arr = []) => (...args) => (arg => arg.length === fn.length? fn(...arg): Currying(fn, arg))([...arr, ...args])
 
 /*
 六、实现Promise
