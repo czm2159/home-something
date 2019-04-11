@@ -215,6 +215,28 @@ child.__proto__.__proto__ === Parent.prototype
 /*
 五、实现函数柯里化
 */
+function Currying(fn,args){
+	//获取函数的参数个数，柯里化结束条件
+	var length = fn.length;
+	//看看有没有传入的参数，如果有和之后传入的参数一起
+	var args = args || [];
+	return function(){
+		//逐步添加参数
+		var newArgs = args.concat(Array.prototype.slice.call(arguments));
+		//如果参数满了，则执行函数
+		if(newArgs.length >= length){
+			return fn.apply(this,newArgs);
+		}
+		//参数数量还没有满，可以继续添加
+		else{
+			return Currying(fn,newArgs);
+		}
+	}
+}
+//当然，如果用ES6的话，可以这样(枚举参数)：
+const Currying = (fn,...args) => (...arr) => [...args,...arr].length === fn.length? fn(...[...args,...arr]): Currying(fn,...[...args,...arr]);
+//或者这样(数组参数)：
+var Currying = (fn, arr = []) => (...args) => (arg => arg.length === fn.length? fn(...arg): Currying(fn, arg))([...arr, ...args])
 
 /*
 六、实现Promise
