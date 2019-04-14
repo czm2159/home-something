@@ -243,8 +243,36 @@ const Currying = (fn, arr = []) => (...args) => (arg => arg.length === fn.length
 */
 
 /*
-七、实现防抖和节流
+七、实现防抖和节流，主要处理高频触发事件，高频触发事件里应尽量减少复杂操作
 */
+//防抖(Debouncing)，例如连续点击提交按钮导致表单post了多次
+function debounce(fn, wait, immediate){
+	//倒计时
+	var timeout;
+	return function(){
+		//保存当前调用对象和事件对象等参数
+		var context = this;
+		var args = arguments;
+		//清理倒计时任务
+		timeout && clearTimeout(timeout);
+		//如果是立即执行
+		if(immediate){
+			//没有倒计时地址的时候才执行，如果有则说明事件还不到
+			!timeout && fn.apply(context, args);
+			timeout = setTimeout(function(){
+				//清空倒计时地址
+				timeout = null;
+			},wait);
+		}
+		//如果是最后执行
+		else{
+			timeout = setTimeout(function(){
+				fn.apply(context, args);
+			},wait);
+		}
+	}
+}
+//节流(Throttling)，例如resize事件中计算元素的样式以适应屏幕
 
 /*
 八、实现一个深拷贝
