@@ -242,6 +242,7 @@ const Currying = (fn, arr = []) => (...args) => (arg => arg.length === fn.length
 六、实现Promise
 */
 
+
 /*
 七、实现防抖和节流，主要处理高频触发事件，高频触发事件里应尽量减少复杂操作
 */
@@ -273,7 +274,16 @@ function debounce(fn, wait, immediate){
 	}
 }
 //节流(Throttling)，例如resize事件中计算元素的样式以适应屏幕
-
-/*
-八、实现一个深拷贝
-*/
+function throttle(fn, wait){
+	//前一次执行的时刻
+	var prevtime;
+	return function(){
+		//如果第一次执行
+		!prevtime && (prevtime = new Date());
+		//如果经过的时间超过了阈值，立即执行函数，并把当前时刻作为下一轮的开始时刻
+		if((new Date) - prevtime >= wait){
+			fn.call(this, arguments);
+			prevtime = new Date();
+		}
+	}
+}
