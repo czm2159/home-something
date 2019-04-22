@@ -241,7 +241,56 @@ const Currying = (fn, arr = []) => (...args) => (arg => arg.length === fn.length
 /*
 六、实现Promise
 */
+//基础版
+const PENDING = "pending";
+const FULFILLED = "fulfilled";
+const REJECTED = "rejected";
 
+function CUSTOMPromise(excutor) {
+    const _self = this;
+    this.status = PENDING;//初始状态
+    this.value = '';//成功返回的值
+    this.reason = '';//如果失败要返回原因
+    function resolve(value){
+        //在下一轮事件循环之前执行，注意宏任务和微任务的区别
+        setTimeout(function(){
+            //只有从等待到成功才执行，避免多次执行
+            if(_self.status === PENDING){
+                //只是设置状态和值，在then中执行
+                _self.status = FULFILLED;
+                _self.value = value;
+            }
+        })
+    }
+    function reject(reason){
+        setTimeout(function(){
+            if(_self.status === PENDING){
+                _self.status === REJECTED;
+                _self.reason = reason;
+            }
+        });
+    }
+    try{
+        excutor(resolve,reject);
+    }catch(e){
+        reject(e);
+    }
+}
+
+CUSTOMPromise.prototype.then = function(onFullfilled, onRejected) {
+    const _self = this;
+    switch(_self.status){
+        case FULFILLED:
+            //执行成功方法
+            onFullfilled(_self.value);
+            break;
+        case REJECTED:
+            //执行失败方法
+            onRejected(_self.reason);
+            break;
+        default:break;
+    }
+}
 
 /*
 七、实现防抖和节流，主要处理高频触发事件，高频触发事件里应尽量减少复杂操作
